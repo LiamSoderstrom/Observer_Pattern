@@ -86,14 +86,10 @@ class Compositioned_cls():
             for attributes in [properties for properties in dir(self) if not properties.startswith("_") and not callable(properties)]:
                 print(attributes)
                 for obj in getattr(self, str(attributes)):
-                    for function in dir(obj): 
-                        if str(function.endswith("_sub")):
+                    for function in [func for func in dir(obj) if func.endswith("_sub")]:
                             subscription = getattr(obj, function)
                             self._observer[str(function[:-4])].append(subscription)
 
-                
-                         
-    
     #Uses the observer to execute functions.
     def _post_event(self, func : str, *args, **kwargs):
         
@@ -104,13 +100,7 @@ class Compositioned_cls():
     #Subscribes functions to the observer after initialisation.                
     def __post_init__(self):
         self._compile_subscribers()
-                
     
-                
-           
-
-        
-
 #Tests the global and class observers.
 def main():
     
