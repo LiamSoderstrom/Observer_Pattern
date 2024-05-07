@@ -70,41 +70,70 @@ class Inventory():
 
 
 
-#Test compositioned class where attributes are checked for functions to be appended to the observer.   
+#Test compositioned class where attributes functions are used through an observer.   
+@dataclass
 class Compositioned_cls():
     
-    def __init__(self, id : int = 42, first : object = Strength(natval = 0.2, curval = 0.1), second : object = Inventory(invsize = 0.1)):
-        self._id = id
-        self._observer = defaultdict(list)
-        self.first = first
-        self.second = second
-        self._compile_subscribers()
+    _observer = defaultdict(list)
+    traitval = [Strength(natval = 0.2, curval = 0.1)]
+    utilities = [Inventory(invsize = 0.1)]
         
+    #A function which subscribes functions 
     def _compile_subscribers(self, func: callable = None):
 
-        if func == None:    
-            for attribute in [attr for attr in self.__dict__ if not attr.startswith("_") and not callable(attr)]:
-                for function in [func for func in dir(getattr(self, attribute)) if str(func).endswith("_sub")]:
-                    self._observer[str(function[:-4])].append(function)
+        #Used when initializing the compositioned class
+        if func == None:
+            for attributes in [properties for properties in dir(self) if not properties.startswith("_") and not callable(properties)]:
+                print(attributes)
+                for obj in getattr(self, str(attributes)):
+                    for function in dir(obj): 
+                        if str(function.endswith("_sub")):
+                            subscription = getattr(obj, function)
+                            self._observer[str(function[:-4])].append(subscription)
+
+                
+                         
+    
+    #Uses the observer to execute functions.
+    def _post_event(self, func : str, *args, **kwargs):
+        
+        for subscribers in self._observer[str(func)]:
+            for function in subscribers:
+                function(*args, **kwargs)
+    
+    #Subscribes functions to the observer after initialisation.                
+    def __post_init__(self):
+        self._compile_subscribers()
+                
+    
                 
            
 
         
 
-
+#Tests the global and class observers.
 def main():
+    
+    #Creates and tests the global observer 
     kalle = Attribute_1(val_1=10)
     pelle = Attribute_2(val_1=20)
     global_subscribe("ch_val", pelle.ch_val)
+    
     global_post("ch_val", 30)
     print(f"Kalle val: {kalle.val_1}\nPelle val: {pelle.val_1}")
     kalle.ch_val(10)
     print(f"Kalle val: {kalle.val_1}\nPelle val: {pelle.val_1}")
+    
+    #Creates the compositioned class and tests
     sten = Compositioned_cls()
+    global_observer["ch_natstr"].append(sten.traitval[0].ch_natstr_sub)
+    print(global_observer)
     print(sten._observer)
 
     
+    
 if __name__ == "__main__":
+    
     main()
     
 
